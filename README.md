@@ -21,7 +21,7 @@ This is the official implementation of the paper:
 ---
 
 
-- 🤗 HF Models and the full evaluation logs are comming soon.
+- 🤗 [HF Models](https://huggingface.co/collections/Shiyu-Lab/thinkprune-67f550c57f5baf0521403881)
 
 
 ## Enviroment & Data Preprocessing
