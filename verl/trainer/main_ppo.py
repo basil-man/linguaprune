@@ -27,7 +27,7 @@ import numpy as np
 
 from verl import DataProto
 import torch
-from verl.utils.reward_score import gsm8k, qwen_math, code, kklogic
+from verl.utils.reward_score import qwen_math, code, kklogic
 from verl.trainer.ppo.ray_trainer import RayPPOTrainer
 
 import logging
@@ -60,7 +60,7 @@ def seed_everything(seed: int = 42):
 seed_everything(42)
 
 SOURCE_TO_SCORE_FN = {
-    "openai/gsm8k": gsm8k.compute_score,
+    "openai/gsm8k": qwen_math.compute_score_lingua,
     "math": qwen_math.compute_score,
     "AIME22": qwen_math.compute_score,
     "AIME23": qwen_math.compute_score,
@@ -72,8 +72,8 @@ SOURCE_TO_SCORE_FN = {
 }
 
 SOURCE_TO_SCORE_FN_WITH_FORMAT = {
-    "openai/gsm8k": gsm8k.compute_score,
-    "math": qwen_math.compute_score_r1,
+    "openai/gsm8k": qwen_math.compute_score_lingua,
+    "math": qwen_math.compute_score,
     "code": code.compute_score,
 }
 

@@ -29,6 +29,7 @@ from tools.eval_utils import (
     load_local_amc23,
     load_local_olympiad_bench,
     load_math500,
+    load_gsm8k,
 )
 
 flags.DEFINE_integer("rank", None, help="The rank for current progress.")
@@ -62,7 +63,7 @@ flags.DEFINE_enum(
     "dataset_name",
     None,
     required=True,
-    enum_values=["math500", "aime", "amc23", "olympiad_bench"],
+    enum_values=["math500", "aime", "amc23", "olympiad_bench","gsm8k"],
     help="The evaluation dataset."
 )
 flags.DEFINE_integer(
@@ -93,6 +94,12 @@ MODEL_NANE_TO_SPECIAL_TOKENS = {
         "until_thinking": "</think>",
     },
     "Qwen/QwQ-32B":{
+        "thinking_start": "<|im_start|>assistant\n<think>",
+        "thinking_end": "</think>\n\n",
+        "thinking_end_max": "</think>\n\nThe final answer is",
+        "until_thinking": "</think>",
+    },
+    "Qwen/Qwen2.5-0.5B-Instruct":{
         "thinking_start": "<|im_start|>assistant\n<think>",
         "thinking_end": "</think>\n\n",
         "thinking_end_max": "</think>\n\nThe final answer is",
@@ -289,6 +296,8 @@ def main(argv):
         local_ds = load_local_amc23(rank, world_size)
     elif dataset_name == "olympiad_bench":
         local_ds = load_local_olympiad_bench(rank, world_size)
+    elif dataset_name == "gsm8k":
+        local_ds = load_gsm8k(rank, world_size)
     else:
         raise ValueError()
 

@@ -21,10 +21,11 @@
 
 import multiprocessing
 import re
-from collections import defaultdict
+from collections import defaultdict, Counter
 from functools import lru_cache
 from math import isclose
-from typing import List, Union, Tuple
+from typing import List, Union, Tuple, Dict
+import numpy as np
 
 import regex
 from latex2sympy2 import latex2sympy
@@ -32,6 +33,7 @@ from sympy import N, simplify
 from sympy.parsing.latex import parse_latex
 from sympy.parsing.sympy_parser import parse_expr
 from word2number import w2n
+import requests
 
 
 def compute_score(
@@ -64,6 +66,50 @@ def compute_score(
         except:
             score = format_score
     return score, answer
+
+def compute_score_lingua(
+    solution_str, ground_truth, results_cache, lock, format_score=0.0, 
+    analyzer_api_url="http://localhost:5000/get_token_importance"
+) -> tuple:
+    answer = extract_answer(solution_str, "math", use_last_number=False)
+    if answer is None or answer == "":
+        return 0, answer
+
+    # 提前分析（只做一次）
+    acc = math_equal_process_lingua(answer, ground_truth)
+    if not acc:
+        return format_score, answer
+
+    # 通过API访问analyzer
+    try:
+        response = requests.post(
+            analyzer_api_url,
+            json={"solution_str": solution_str},
+            timeout=30
+        )
+        response.raise_for_status()
+        result = response.json()
+        importance = result.get('importance')
+        
+        # with open("analyzer_location.log", "a", encoding="utf-8") as f:
+        #     f.write(f"[MainProcess] Calling analyzer API\n")
+        #     f.write(f"[MainProcess] solution_str: {solution_str}\n")
+        #     f.write(f"[MainProcess] importance: {importance}\n")
+            
+    except Exception as e:
+        # with open("analyzer_location.log", "a", encoding="utf-8") as f:
+        #     f.write(f"[MainProcess] API Error: {str(e)}\n")
+        importance = format_score  # 出错时返回默认值
+
+    return importance, answer
+
+
+def math_equal_process_lingua(answer, ground_truth):
+    try:
+        ground_truth = strip_string(ground_truth)
+        return math_equal(answer, ground_truth)
+    except:
+        return False
 
 
 def math_equal_process(answer, ground_truth, output_queue):
@@ -931,3 +977,5 @@ def call_with_timeout(func, *args, timeout=3, **kwargs):
         return False
 
     return output_queue.get()
+
+

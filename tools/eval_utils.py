@@ -36,6 +36,12 @@ DATASET_TO_SAMPLING_PARAMS = {
         n=16,
         max_tokens=32_000,
     ),
+    "gsm8k":dict(
+        temperature=0.6,
+        top_p=0.95,
+        n=16,
+        max_tokens=32_000,
+    ),
 }
 
 def load_local_amc23(rank: int, world_size: int):
@@ -151,6 +157,29 @@ def load_aime2223(rank: int, world_size: int):
         local_ds = dataset[rank * size_per_rank: (rank+1) * size_per_rank]
     else:
         local_ds = dataset[rank * size_per_rank:]
+    print(f"{len(local_ds)} examples loaded.")
+    return local_ds
+
+def load_gsm8k(rank: int, world_size: int):
+    from datasets import load_dataset
+    hf_data = load_dataset("gsm8k", "main", split="test")
+
+    dataset = []
+    for data in hf_data:
+        converted_data = {
+            "question": data["question"],
+            "solution": data["answer"],
+            "answer": data["answer"],
+        }
+        dataset.append(converted_data)
+
+    num_examples = len(dataset)
+    size_per_rank = num_examples // world_size
+    if rank < world_size - 1:
+        local_ds = dataset[rank * size_per_rank: (rank + 1) * size_per_rank]
+    else:
+        local_ds = dataset[rank * size_per_rank:]
+
     print(f"{len(local_ds)} examples loaded.")
     return local_ds
 
